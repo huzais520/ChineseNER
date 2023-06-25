@@ -5,9 +5,10 @@ import re
 import pdb
 import pandas as pd
 import numpy as np
+import funcy as fc
 import collections
 def originHandle():
-    with open('./renmin.txt','r') as inp,open('./renmin2.txt','w') as outp:
+    with codecs.open('./renmin.txt','r','utf-8') as inp, codecs.open('./renmin2.txt','w','utf-8') as outp:
         for line in inp.readlines():
             line = line.split('  ')
             i = 1
@@ -55,9 +56,9 @@ def originHandle2():
                 i+=1
             outp.write('\n')
 def sentence2split():
-    with open('./renmin3.txt','r') as inp,codecs.open('./renmin4.txt','w','utf-8') as outp:
-        texts = inp.read().decode('utf-8')
-        sentences = re.split('[，。！？、‘’“”:]/[O]'.decode('utf-8'), texts)
+    with codecs.open('./renmin3.txt','r','utf-8') as inp,codecs.open('./renmin4.txt','w','utf-8') as outp:
+        texts = inp.read()
+        sentences = re.split('[，。！？、‘’“”:]/[O]', texts)
         for sentence in sentences:
 	        if sentence != " ":
 		        outp.write(sentence.strip()+'\n')     
@@ -87,10 +88,9 @@ def data2pkl():
             labels.append(linelabel)
 
     input_data.close()
-    print len(datas)
-    print len(labels)
-    from compiler.ast import flatten
-    all_words = flatten(datas)
+    print(len(datas))
+    print(len(labels))
+    all_words = fc.flatten(datas)
     sr_allwords = pd.Series(all_words)
     sr_allwords = sr_allwords.value_counts()
     set_words = sr_allwords.index
@@ -105,7 +105,7 @@ def data2pkl():
     id2tag = pd.Series(tags, index=tag_ids)
     word2id["unknow"]=len(word2id)+1
     id2word[len(word2id)]="unknow"
-    print tag2id
+    print(tag2id)
     max_len = 60
     def X_padding(words):
         ids = list(word2id[words])
@@ -144,7 +144,7 @@ def data2pkl():
 	    pickle.dump(y_test, outp)
 	    pickle.dump(x_valid, outp)
 	    pickle.dump(y_valid, outp)
-    print '** Finished saving the data.'
+    print('** Finished saving the data.')
     
 
 

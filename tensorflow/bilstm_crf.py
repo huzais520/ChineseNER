@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*
 import numpy as np
-import tensorflow as tf
+import tensorflow_addons as tfa
+import tensorflow._api.v2.compat.v1 as tf
+tf.disable_v2_behavior()
+
 
 class Model:
     def __init__(self,config,embedding_pretrained,dropout_keep=1):
@@ -16,8 +19,7 @@ class Model:
         self.input_data = tf.placeholder(tf.int32, shape=[self.batch_size,self.sen_len], name="input_data") 
         self.labels = tf.placeholder(tf.int32,shape=[self.batch_size,self.sen_len], name="labels")
         self.embedding_placeholder = tf.placeholder(tf.float32,shape=[self.embedding_size,self.embedding_dim], name="embedding_placeholder")
-        with tf.variable_scope("bilstm_crf") as scope:
-            self._build_net()
+        with tf.variable_scope("bilstm_crf") as scope: self._build_net()
     def _build_net(self):
         word_embeddings = tf.get_variable("word_embeddings",[self.embedding_size, self.embedding_dim])
         if self.pretrained:
@@ -48,12 +50,12 @@ class Model:
         bilstm_out = tf.tanh(tf.matmul(bilstm_out, W) + b)
 
         # Linear-CRF.
-        log_likelihood, self.transition_params = tf.contrib.crf.crf_log_likelihood(bilstm_out, self.labels, tf.tile(np.array([self.sen_len]),np.array([self.batch_size])))
+        log_likelihood, self.transition_params = tfa.text.crf_log_likelihood(bilstm_out, self.labels, tf.tile(np.array([self.sen_len]),np.array([self.batch_size])))
 
         loss = tf.reduce_mean(-log_likelihood)
 
         # Compute the viterbi sequence and score (used for prediction and test time).
-        self.viterbi_sequence, viterbi_score = tf.contrib.crf.crf_decode(bilstm_out, self.transition_params,tf.tile(np.array([self.sen_len]),np.array([self.batch_size])))
+        self.viterbi_sequence, viterbi_score = tfa.text.crf.crf_decode(bilstm_out, self.transition_params,tf.tile(np.array([self.sen_len]),np.array([self.batch_size])))
 
         # Training ops.
         optimizer = tf.train.AdamOptimizer(self.lr)
